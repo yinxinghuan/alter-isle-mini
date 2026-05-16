@@ -1,16 +1,20 @@
 /**
  * UIManager.js — mobile-first variant.
  *
- * Owns the bottom dock (category tabs + swatch scroller) and the top-left
- * "•••" settings popover (grid / shadows / fill-grass / reset).
+ * Owns:
+ *   • Bottom dock (category tabs + swatch scroller)
+ *   • Top toolbar (build/pan/erase mode + rotate action)
+ *   • Top-left "•••" settings popover (grid / shadows / fill / reset)
+ *   • First-run hint card (shown once per browser, dismissible)
  *
- * No left toolbar, no right palette, no HUD, no instructions panel —
- * those were all desktop affordances. On mobile every gesture is direct:
- * tap to place, long-press to erase, pinch + two-finger drag for camera.
+ * No keyboard, no flip-preview menu, no manual Save button. The toolbar
+ * mode and the dock are the two persistent UI surfaces.
  */
 
 import { BottomDock } from './BottomDock.js';
 import { playUiClick } from './Audio.js';
+
+const HINT_SEEN_KEY = 'alteru.alter-isle-mini.hint.seen';
 
 export class UIManager {
     constructor(game) {
@@ -23,8 +27,9 @@ export class UIManager {
         this.toast = document.getElementById('toast');
 
         this._wireSettings();
+        this._wireToolbar();
+        this._wireHintCard();
 
-        // Expose for sibling modules.
         game.dock = this.dock;
     }
 
@@ -52,15 +57,13 @@ export class UIManager {
             else close();
         });
 
-        // Tap anywhere outside the popover (incl. the canvas) closes it.
-        // We listen on document with the capture phase so the popover's
-        // own button taps stop propagation first.
+        // Outside-click closes the popover. Capture phase so the popover
+        // buttons stop propagation first.
         document.addEventListener('pointerdown', (e) => {
             if (pop.classList.contains('hidden')) return;
             if (pop.contains(e.target) || btn.contains(e.target)) return;
             close();
         }, true);
-
         pop.addEventListener('pointerdown', (e) => e.stopPropagation());
 
         for (const item of pop.querySelectorAll('button')) {
@@ -78,6 +81,7 @@ export class UIManager {
     }
 
     _syncSettings() {
+        if (!this.settingsPop) return;
         const r = this.game.renderer;
         for (const item of this.settingsPop.querySelectorAll('button')) {
             const action = item.dataset.action;
@@ -86,8 +90,73 @@ export class UIManager {
         }
     }
 
+    _wireToolbar() {
+        const modeBtns = Array.from(document.querySelectorAll('.tool-mode'));
+        const rotateBtn = document.getElementById('tool-rotate');
+        this.modeBtns = modeBtns;
+        this.rotateBtn = rotateBtn;
+
+        for (const b of modeBtns) {
+            b.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                playUiClick();
+                const mode = b.dataset.mode;
+                this.game.setTool(mode);
+            });
+        }
+
+        if (rotateBtn) {
+            rotateBtn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                playUiClick();
+                this.game.toggleFlipH();
+                // Quick visual confirm — short rotation tween on the icon.
+                rotateBtn.animate(
+                    [{ transform: 'rotate(0deg)' }, { transform: 'rotate(-90deg)' }],
+                    { duration: 220, easing: 'cubic-bezier(0.2, 1.1, 0.3, 1)' }
+                );
+            });
+        }
+    }
+
+    _syncToolbar() {
+        if (!this.modeBtns) return;
+        for (const b of this.modeBtns) {
+            const on = b.dataset.mode === this.game.tool;
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        }
+    }
+
+    _wireHintCard() {
+        const card = document.getElementById('hint-card');
+        const dismiss = document.getElementById('hint-dismiss');
+        if (!card || !dismiss) return;
+        // Show once per browser. Cleared if the user resets via dev tools.
+        let seen = false;
+        try { seen = localStorage.getItem(HINT_SEEN_KEY) === '1'; } catch {}
+        if (!seen) {
+            card.classList.remove('hidden');
+            card.setAttribute('aria-hidden', 'false');
+        }
+        const close = () => {
+            card.classList.add('hidden');
+            card.setAttribute('aria-hidden', 'true');
+            try { localStorage.setItem(HINT_SEEN_KEY, '1'); } catch {}
+        };
+        dismiss.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            playUiClick();
+            close();
+        });
+        // Tapping the dim background also closes — quick escape.
+        card.addEventListener('pointerdown', (e) => {
+            if (e.target === card) close();
+        });
+    }
+
     update() {
         this.dock.update();
+        this._syncToolbar();
     }
 
     showToast(text, ms = 1600) {

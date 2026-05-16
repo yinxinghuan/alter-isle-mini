@@ -86,8 +86,9 @@ export class Game {
         this.selectedAssetId = id;
         this.category = a.category;
         if (changed) this._resetFlip();
-        // Picking an asset implies "place" mode.
-        if (this.tool === 'erase') this.setTool('place');
+        // Picking a swatch always implies the player wants to build — pull
+        // them out of pan / erase so the very next tap places the piece.
+        if (this.tool !== 'place') this.setTool('place');
         this.renderer.markDirty();
         this.ui?.update();
     }
@@ -96,7 +97,7 @@ export class Game {
         this.flipH = !this.flipH;
         this._syncPreviewFlip();
         this.renderer.markDirty();
-        this.ui?.showToast(`Flip horizontal: ${this.flipH ? 'on' : 'off'}`);
+        this.ui?.showToast('Rotated');
         this.ui?.update();
     }
 

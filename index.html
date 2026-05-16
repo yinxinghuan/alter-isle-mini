@@ -36,6 +36,52 @@
             <button type="button" data-action="reset"   role="menuitem" class="danger">Reset island</button>
         </div>
 
+        <!-- Top toolbar: build/pan/erase mode segmented + rotate action -->
+        <div id="toolbar-top" role="toolbar" aria-label="Tools">
+            <div id="tool-modes" role="group">
+                <button type="button" class="tool-mode" data-mode="place" aria-pressed="true" aria-label="Build">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="6" y="11" width="12" height="8" rx="1" fill="currentColor"/>
+                        <path d="M4 12 L12 5 L20 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <button type="button" class="tool-mode" data-mode="pan" aria-pressed="false" aria-label="Pan">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 4 V20 M4 12 H20 M9 7 L12 4 L15 7 M9 17 L12 20 L15 17 M7 9 L4 12 L7 15 M17 9 L20 12 L17 15"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <button type="button" class="tool-mode" data-mode="erase" aria-pressed="false" aria-label="Erase">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M5.5 14.5 L14.5 5.5 L19.5 10.5 L10.5 19.5 L5 19.5 Z"
+                            fill="currentColor"/>
+                        <path d="M9.5 10.5 L15.5 16.5" stroke="#F4F1EA" stroke-width="1.5" fill="none"/>
+                    </svg>
+                </button>
+            </div>
+            <button type="button" id="tool-rotate" class="tool-action" aria-label="Rotate next placement">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M20 12 A8 8 0 1 1 12 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                    <path d="M12 1 L16 4 L12 7 Z" fill="currentColor"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- First-run hint card -->
+        <div id="hint-card" class="hidden" aria-hidden="true">
+            <div class="hint-card-inner">
+                <h3>Build your isle</h3>
+                <ul class="hint-list">
+                    <li><b>Tap</b> a tile to place the selected piece</li>
+                    <li><b>Drag</b> to brush across cells</li>
+                    <li><b>Pan / Erase</b> tools at the top change the mode</li>
+                    <li><b>Two-finger drag</b> moves the camera anytime</li>
+                    <li><b>Pinch</b> to zoom</li>
+                </ul>
+                <button type="button" id="hint-dismiss">Got it</button>
+            </div>
+        </div>
+
         <!-- Bottom dock: 3 category tabs + horizontal swatch scroller -->
         <section id="dock">
             <nav id="dock-tabs"></nav>

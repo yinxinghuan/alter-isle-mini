@@ -216,6 +216,158 @@ html, body {
 #settings-pop button.danger:hover  { background: var(--coral-light); }
 #settings-pop button.danger:active { background: var(--coral); color: var(--bone); }
 
+/* ── Top toolbar: mode + rotate ────────────────────────────────── */
+
+#toolbar-top {
+    position: fixed;
+    top: calc(14px + var(--safe-top));
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 19;
+    pointer-events: none;
+    /* Children get pointer-events back; the wrapper is just for layout
+       so the canvas behind the gap between segmented control and rotate
+       remains pannable. */
+}
+#toolbar-top > * { pointer-events: auto; }
+
+#tool-modes {
+    display: inline-flex;
+    background: var(--bone);
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+    padding: 4px;
+    gap: 2px;
+}
+.tool-mode {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    background: transparent;
+    border-radius: 999px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.06s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+.tool-mode:active { transform: scale(0.94); }
+.tool-mode svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+}
+.tool-mode[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--bone);
+}
+
+.tool-action {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 22px;
+    background: var(--bone);
+    color: var(--ink);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.06s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+.tool-action:active { transform: scale(0.92) rotate(-12deg); }
+.tool-action svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+}
+
+/* ── First-run hint card ───────────────────────────────────────── */
+
+#hint-card {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    background: rgba(14, 14, 18, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    padding: 24px;
+    animation: aim-fade-in 0.22s ease;
+}
+#hint-card.hidden { display: none; }
+@keyframes aim-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+.hint-card-inner {
+    background: var(--bone);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 28px 28px 24px;
+    width: 320px;
+    max-width: 100%;
+    text-align: left;
+    animation: aim-pop-up 0.28s cubic-bezier(0.22, 1.2, 0.34, 1);
+}
+@keyframes aim-pop-up {
+    from { opacity: 0; transform: scale(0.92) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.hint-card-inner h3 {
+    margin: 0 0 14px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+}
+.hint-list {
+    list-style: none;
+    margin: 0 0 18px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.hint-list li {
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--ink-soft);
+}
+.hint-list b {
+    color: var(--ink);
+    font-weight: 700;
+}
+#hint-dismiss {
+    width: 100%;
+    padding: 12px;
+    background: var(--coral);
+    color: var(--bone);
+    border: 0;
+    border-radius: var(--radius);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.06s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+#hint-dismiss:active { background: var(--coral-2); transform: scale(0.98); }
+
 /* ── Bottom dock ───────────────────────────────────────────────── */
 
 #dock {
@@ -323,11 +475,11 @@ html, body {
 
 #watermark {
     position: fixed;
-    right: calc(14px + var(--safe-right));
-    top:   calc(14px + var(--safe-top));
-    width: 62px;
-    height: 42px;
-    background-color: rgba(14, 14, 26, 0.42);
+    left:   calc(14px + var(--safe-left));
+    bottom: calc(var(--dock-height) + 12px + var(--safe-bottom));
+    width: 56px;
+    height: 38px;
+    background-color: rgba(14, 14, 26, 0.34);
     -webkit-mask: url("img/aigram.svg") center / contain no-repeat;
             mask: url("img/aigram.svg") center / contain no-repeat;
     z-index: 9;
