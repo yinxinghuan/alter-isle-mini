@@ -45,8 +45,18 @@ let _assets = null;
 const DEFAULT_DPR = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
 const MAX_ZOOM    = 3.0;
 const DISPLAY_SUPERSAMPLE = Math.max(2, Math.ceil(MAX_ZOOM * DEFAULT_DPR));
-const SHADOW_SUPERSAMPLE  = 1;
-const SHADOW_BLUR_PX      = 6;
+// Shadow used to be hard-coded to 1 — the upstream's perf bet that no
+// one would notice. On DPR=3 phones that meant the shadow buffer was a
+// quarter the device-pixel resolution of the main sprite, so each
+// shadow pixel got stretched 3× → visible terracing.
+//
+// Tracking DPR keeps the shadow buffer at the same device-pixel
+// density as the sprite it sits under. Blur radius is scaled with it
+// so the soft edge stays the same width in CSS px regardless of DPR.
+// Pre-blur happens once at load time, so the per-frame draw is still
+// a flat drawImage — no runtime cost.
+const SHADOW_SUPERSAMPLE  = Math.max(1, Math.ceil(DEFAULT_DPR));
+const SHADOW_BLUR_PX      = 6 * SHADOW_SUPERSAMPLE;
 
 /**
  * Pre-render an asset's source canvas down to a draw-ready canvas at the
@@ -104,11 +114,21 @@ function buildShadowCanvas(srcCanvas, displayW, displayH) {
     tctx.fillStyle = '#000';
     tctx.fillRect(0, 0, w, h);
 
+    // The renderer expects `padding` / `width` / `height` in *display
+    // (CSS) px* — it scales the buffer at draw time via drawImage. So
+    // we convert the supersampled buffer figures back down by
+    // SUPERSAMPLE here. When SUPERSAMPLE was hard-coded to 1 they were
+    // identical and nobody noticed; with DPR-tracking SUPERSAMPLE the
+    // conversion becomes load-bearing.
+    const cssPad     = pad     / SHADOW_SUPERSAMPLE;
+    const cssTargetW = targetW / SHADOW_SUPERSAMPLE;
+    const cssTargetH = targetH / SHADOW_SUPERSAMPLE;
+
     // Pre-blur once at load time. If the browser doesn't support
     // `ctx.filter`, we just ship the un-blurred silhouette — the renderer
     // adds an extra alpha shrink to soften it visually.
     if (typeof tctx.filter !== 'string') {
-        return { canvas: tmp, padding: pad, width: targetW, height: targetH, blurred: false };
+        return { canvas: tmp, padding: cssPad, width: cssTargetW, height: cssTargetH, blurred: false };
     }
     const out = document.createElement('canvas');
     out.width  = w;
@@ -116,7 +136,7 @@ function buildShadowCanvas(srcCanvas, displayW, displayH) {
     const octx = out.getContext('2d');
     octx.filter = `blur(${SHADOW_BLUR_PX}px)`;
     octx.drawImage(tmp, 0, 0);
-    return { canvas: out, padding: pad, width: targetW, height: targetH, blurred: true };
+    return { canvas: out, padding: cssPad, width: cssTargetW, height: cssTargetH, blurred: true };
 }
 
 /**
