@@ -72,7 +72,7 @@ const CACHE_SCALE = Math.min(3, Math.max(2, Math.ceil(_DPR * 1.5)));
 
 // Shadow tuning. Pre-blurring happens once at asset-load time; the
 // renderer just transforms + alphas the silhouettes per frame.
-const SHADOW_ALPHA       = 0.32;
+const SHADOW_ALPHA       = 0.25;
 const BACK_DRIFT_X       = 0.16;
 const BACK_DRIFT_Y       = 0.48;
 

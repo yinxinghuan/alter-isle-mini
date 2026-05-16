@@ -56,7 +56,10 @@ const DISPLAY_SUPERSAMPLE = Math.max(2, Math.ceil(MAX_ZOOM * DEFAULT_DPR));
 // Pre-blur happens once at load time, so the per-frame draw is still
 // a flat drawImage — no runtime cost.
 const SHADOW_SUPERSAMPLE  = Math.max(1, Math.ceil(DEFAULT_DPR));
-const SHADOW_BLUR_PX      = 6 * SHADOW_SUPERSAMPLE;
+// 6→4 CSS-px sigma. Trades a touch of softness for a tighter,
+// less-floaty edge — shadows hug their object instead of bleeding
+// outward into the surrounding grass.
+const SHADOW_BLUR_PX      = 4 * SHADOW_SUPERSAMPLE;
 
 /**
  * Pre-render an asset's source canvas down to a draw-ready canvas at the
