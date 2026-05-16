@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Alter Isle Mini — AlterU</title>
     <link rel="icon" type="image/svg+xml" href="img/aigram.svg" />
-    <link rel="stylesheet" href="styles.css?v=5" />
+    <link rel="stylesheet" href="styles.css?v=6" />
 </head>
 <body>
     <div id="loading-screen">
@@ -80,17 +80,20 @@
                     </svg>
                 </button>
                 <button type="button" class="tool-mode" data-mode="erase" aria-pressed="false" aria-label="Erase">
-                    <!-- Tilted stationery eraser: pink rubber tip + ink body
-                         with a small dust speck. The single most recognisable
-                         "erase" glyph in software UI. -->
+                    <!-- Tilted eraser, outlined to match the +/pan icons:
+                         no fills, currentColor stroke, two dust ticks
+                         below to read as "erasing motion". -->
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <g transform="rotate(-32 12 12)">
-                            <rect x="2.5" y="9.5" width="19" height="6.6" rx="1.4" fill="currentColor"/>
-                            <rect x="2.5" y="9.5" width="7"  height="6.6" rx="1.4" fill="#FFB7AD"/>
-                            <line x1="9.5" y1="9.5" x2="9.5" y2="16.1" stroke="currentColor" stroke-width="0.6" opacity="0.5"/>
+                            <rect x="3" y="9" width="18" height="6" rx="1.6"
+                                  fill="none" stroke="currentColor" stroke-width="2"
+                                  stroke-linejoin="round"/>
+                            <line x1="10.5" y1="9" x2="10.5" y2="15"
+                                  stroke="currentColor" stroke-width="1.8"/>
                         </g>
-                        <circle cx="6"  cy="19.5" r="0.9" fill="currentColor"/>
-                        <circle cx="8.4" cy="20.4" r="0.6" fill="currentColor"/>
+                        <path d="M5 19.5 L7 20.2 M9 20.4 L11 20.9"
+                              stroke="currentColor" stroke-width="1.6"
+                              stroke-linecap="round" fill="none"/>
                     </svg>
                 </button>
             </div>
@@ -133,6 +136,6 @@
         <div id="toast"></div>
     </div>
 
-    <script type="module" src="src/main.js?v=5"></script>
+    <script type="module" src="src/main.js?v=6"></script>
 </body>
 </html>

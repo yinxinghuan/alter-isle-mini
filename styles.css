@@ -444,10 +444,12 @@ html, body {
 }
 
 .tool-action {
-    width: 44px;
-    height: 44px;
+    /* Match the segmented control's outer height (44px button + 2*4px
+       padding) so the two pieces sit on the same baseline. */
+    width: 52px;
+    height: 52px;
     border: 0;
-    border-radius: 22px;
+    border-radius: 26px;
     background: var(--bone);
     color: var(--ink);
     box-shadow: var(--shadow);
@@ -462,8 +464,8 @@ html, body {
 }
 .tool-action:active { transform: scale(0.92) rotate(-12deg); }
 .tool-action svg {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     display: block;
 }
 
