@@ -1,0 +1,372 @@
+/* Alter Isle Mini — mobile-first UI.
+   Full-screen canvas. Bottom dock for category + swatches. Top-left "•••"
+   opens a tiny popover for grid/shadows/fill/reset. Everything else is
+   silent. AlterU palette: bone base, coral accent, violet secondary,
+   spark milestone yellow. */
+
+:root {
+    --bone:        #F4F1EA;
+    --bone-2:      #E3DCC9;
+    --ink:         #14141A;
+    --ink-soft:    #2F2F38;
+    --muted:       #7B7872;
+    --line:        #D3CCBA;
+    --coral:       #FF6B5B;
+    --coral-2:     #FF8A7B;
+    --coral-light: #FFE2DC;
+    --violet:      #9D8DFF;
+    --violet-light:#E6E1FF;
+    --spark:       #E7FF5A;
+
+    --shadow:    0 8px 24px rgba(14, 14, 18, 0.10), 0 2px 6px rgba(14, 14, 18, 0.06);
+    --shadow-lg: 0 18px 48px rgba(14, 14, 18, 0.18), 0 4px 12px rgba(14, 14, 18, 0.10);
+    --radius:    14px;
+    --radius-sm: 10px;
+    --radius-lg: 22px;
+
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top:    env(safe-area-inset-top, 0px);
+    --safe-left:   env(safe-area-inset-left, 0px);
+    --safe-right:  env(safe-area-inset-right, 0px);
+
+    --dock-height: 132px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    font-family: 'Inter', 'SF Pro Text', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    color: var(--ink);
+    background: linear-gradient(180deg, var(--bone) 0%, var(--bone-2) 100%);
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    height: 100dvh;
+}
+
+#app.hidden { display: none; }
+
+#game-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    display: block;
+    background: radial-gradient(ellipse at 50% 30%, var(--bone) 0%, var(--bone-2) 60%, var(--line) 100%);
+    /* Stop the browser from interpreting touch gestures (scroll, pinch
+       zoom, double-tap zoom, swipe-back nav). InputManager handles them. */
+    touch-action: none;
+}
+
+/* ── Loading screen ─────────────────────────────────────────────── */
+
+#loading-screen {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(180deg, var(--bone), var(--bone-2));
+    z-index: 999;
+}
+#loading-screen.hidden { display: none; }
+
+.loading-card {
+    background: var(--bone);
+    border-radius: var(--radius-lg);
+    padding: 36px 48px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+    width: 320px;
+    max-width: 80vw;
+}
+.loading-logo {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 12px;
+    background: var(--ink);
+    border-radius: 16px;
+    box-shadow: inset 0 -6px 0 rgba(0,0,0,0.2);
+    position: relative;
+}
+.loading-logo::before {
+    content: '';
+    position: absolute;
+    left: 50%; top: 14px; transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 18px solid transparent;
+    border-right: 18px solid transparent;
+    border-bottom: 32px solid var(--bone);
+}
+.loading-logo::after {
+    content: '';
+    position: absolute;
+    bottom: 16px; left: 50%; transform: translateX(-50%);
+    width: 36px; height: 6px; background: var(--bone);
+    border-radius: 1px;
+}
+.loading-title { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+.loading-sub   { color: var(--muted); margin-top: 4px; font-size: 13px; }
+
+.loading-bar {
+    margin-top: 20px;
+    height: 6px;
+    width: 100%;
+    background: var(--bone-2);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.loading-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--coral), var(--violet));
+    transition: width 0.18s ease;
+}
+.loading-status {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+}
+
+/* ── Settings button (top-left "•••") ─────────────────────────── */
+
+#settings-btn {
+    position: fixed;
+    top: calc(14px + var(--safe-top));
+    left: calc(14px + var(--safe-left));
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+    background: var(--bone);
+    border: 0;
+    box-shadow: var(--shadow);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.15s ease, transform 0.06s ease;
+}
+#settings-btn:active { transform: scale(0.95); }
+#settings-btn.open   { background: var(--ink); }
+#settings-btn .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--ink);
+    transition: background 0.15s ease;
+}
+#settings-btn.open .dot { background: var(--bone); }
+
+#settings-pop {
+    position: fixed;
+    top: calc(66px + var(--safe-top));
+    left: calc(14px + var(--safe-left));
+    background: var(--bone);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    z-index: 20;
+    padding: 6px;
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transform-origin: top left;
+    animation: aim-pop-in 0.16s ease;
+}
+#settings-pop.hidden { display: none; }
+@keyframes aim-pop-in {
+    from { opacity: 0; transform: scale(0.94) translateY(-4px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+#settings-pop button {
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-sm);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    padding: 10px 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+#settings-pop button:hover  { background: var(--violet-light); }
+#settings-pop button:active { background: var(--violet); color: var(--bone); }
+#settings-pop button.active::after {
+    content: '✓';
+    float: right;
+    color: var(--coral);
+    font-weight: 700;
+}
+#settings-pop button.danger        { color: var(--coral); }
+#settings-pop button.danger:hover  { background: var(--coral-light); }
+#settings-pop button.danger:active { background: var(--coral); color: var(--bone); }
+
+/* ── Bottom dock ───────────────────────────────────────────────── */
+
+#dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 8px 0 calc(8px + var(--safe-bottom));
+    background:
+        linear-gradient(180deg, rgba(244, 241, 234, 0) 0%, var(--bone) 28%, var(--bone) 100%);
+    z-index: 10;
+    /* The gradient gives the swatches a soft fade-in at the top so the
+       canvas read isn't a hard horizontal line. */
+    height: var(--dock-height);
+    display: flex;
+    flex-direction: column;
+}
+
+#dock-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 12px 6px;
+    flex-shrink: 0;
+}
+#dock-tabs .tab {
+    border: 0;
+    background: var(--bone-2);
+    color: var(--ink-soft);
+    padding: 7px 14px;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+#dock-tabs .tab:active { transform: scale(0.96); }
+#dock-tabs .tab.active {
+    background: var(--ink);
+    color: var(--bone);
+}
+
+#dock-swatches {
+    display: flex;
+    gap: 8px;
+    padding: 4px 14px 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex: 1 1 auto;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    align-items: center;
+}
+#dock-swatches::-webkit-scrollbar { display: none; }
+#dock-swatches .swatch {
+    flex: 0 0 auto;
+    width: 72px;
+    height: 72px;
+    background: var(--bone-2);
+    border-radius: 14px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 4px 2px;
+    gap: 2px;
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.06s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+#dock-swatches .swatch:active { transform: scale(0.94); }
+#dock-swatches .swatch.selected {
+    background: var(--coral-light);
+    border-color: var(--coral);
+}
+#dock-swatches .swatch canvas,
+#dock-swatches .swatch img {
+    width: 44px;
+    height: 44px;
+    image-rendering: pixelated;
+    object-fit: contain;
+    pointer-events: none;
+}
+#dock-swatches .swatch .name {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    line-height: 1.05;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 64px;
+}
+
+/* ── AlterU watermark ─────────────────────────────────────────── */
+
+#watermark {
+    position: fixed;
+    right: calc(14px + var(--safe-right));
+    top:   calc(14px + var(--safe-top));
+    width: 62px;
+    height: 42px;
+    background-color: rgba(14, 14, 26, 0.42);
+    -webkit-mask: url("img/aigram.svg") center / contain no-repeat;
+            mask: url("img/aigram.svg") center / contain no-repeat;
+    z-index: 9;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Toast ────────────────────────────────────────────────────── */
+
+#toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(var(--dock-height) + 16px);
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: var(--bone);
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: 15;
+    box-shadow: var(--shadow);
+    white-space: nowrap;
+    max-width: 80vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ── Small viewport polish ──────────────────────────────────── */
+
+@media (max-height: 640px) {
+    :root { --dock-height: 116px; }
+    #dock-swatches .swatch { width: 64px; height: 64px; }
+    #dock-swatches .swatch canvas,
+    #dock-swatches .swatch img { width: 38px; height: 38px; }
+}

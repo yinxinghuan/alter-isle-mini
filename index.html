@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0E0E12" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Alter Isle Mini — AlterU</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <div id="loading-screen">
+        <div class="loading-card">
+            <div class="loading-logo"></div>
+            <div class="loading-title">Alter Isle Mini</div>
+            <div class="loading-sub">Pre-rendering the island…</div>
+            <div class="loading-bar"><div class="loading-fill" id="loading-fill"></div></div>
+            <div class="loading-status" id="loading-status">warming the kilns</div>
+        </div>
+    </div>
+
+    <div id="app" class="hidden">
+        <canvas id="game-canvas"></canvas>
+
+        <!-- Top-left: tiny "•••" settings button -->
+        <button id="settings-btn" type="button" aria-label="Settings">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </button>
+
+        <!-- Settings popover (collapsed by default) -->
+        <div id="settings-pop" class="hidden" role="menu">
+            <button type="button" data-action="grid"    role="menuitemcheckbox">Grid</button>
+            <button type="button" data-action="shadows" role="menuitemcheckbox">Shadows</button>
+            <button type="button" data-action="fill"    role="menuitem">Fill with grass</button>
+            <button type="button" data-action="reset"   role="menuitem" class="danger">Reset island</button>
+        </div>
+
+        <!-- Bottom dock: 3 category tabs + horizontal swatch scroller -->
+        <section id="dock">
+            <nav id="dock-tabs"></nav>
+            <div id="dock-swatches"></div>
+        </section>
+
+        <a id="watermark" href="https://alteru.app" target="_blank" rel="noopener" aria-label="AlterU"></a>
+
+        <div id="toast"></div>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
