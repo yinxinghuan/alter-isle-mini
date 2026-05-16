@@ -651,8 +651,8 @@ html, body {
     position: fixed;
     right: calc(14px + var(--safe-right));
     top:   calc(14px + var(--safe-top));
-    width: 74px;
-    height: 50px;
+    width: 52px;
+    height: 36px;
     background-color: var(--ink);
     -webkit-mask: url("img/aigram.svg") center / contain no-repeat;
             mask: url("img/aigram.svg") center / contain no-repeat;

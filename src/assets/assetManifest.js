@@ -25,12 +25,12 @@ import * as A from './assetDefinitions.js';
 
 const T = (id, name, foot = { w: 1, d: 1 }) => ({
     id, name, category: 'ground', footprint: foot, kind: 'terrain',
-    filename: `${id}.png`, sizeScale: 1,
+    filename: `${id}.webp`, sizeScale: 1,
 });
 const O = (category, defaultScale = 1) =>
     (id, name, foot = { w: 1, d: 1 }, sizeScale = defaultScale) => ({
         id, name, category, footprint: foot, kind: 'object',
-        filename: `${id}.png`, sizeScale,
+        filename: `${id}.webp`, sizeScale,
     });
 const N = O('nature', 0.85);
 const P = O('nature', 0.5);     // small props live in the same nature tab on mini
@@ -49,8 +49,8 @@ export const ASSET_MANIFEST = [
 
     { ...W('small_bridge', 'Bridge',     { w: 2, d: 1 }, 0.95), builder: A.smallBridge },
     { ...W('well',         'Well',       { w: 1, d: 1 }, 0.55), builder: A.well },
-    { ...W('garden_bed',   'Garden Bed', { w: 1, d: 1 }, 0.95), filename: 'newAsset/Garden Bed.png', fitCell: true, flatBase: true, noShadow: true, builder: A.plantedGardenBed },
-    { ...W('crop_patch',   'Crop Patch', { w: 1, d: 1 }, 0.95), filename: 'newAsset/Crop Patch.png', fitCell: true, flatBase: true, noShadow: true, builder: A.cropPatch },
+    { ...W('garden_bed',   'Garden Bed', { w: 1, d: 1 }, 0.95), filename: 'newAsset/Garden Bed.webp', fitCell: true, flatBase: true, noShadow: true, builder: A.plantedGardenBed },
+    { ...W('crop_patch',   'Crop Patch', { w: 1, d: 1 }, 0.95), filename: 'newAsset/Crop Patch.webp', fitCell: true, flatBase: true, noShadow: true, builder: A.cropPatch },
 
     // ── NATURE (trees, plants, small props) ───────────────────────
     { ...N('cypress',       'Cypress',       { w: 1, d: 1 }, 0.65), builder: A.cypressCluster },
