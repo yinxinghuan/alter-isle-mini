@@ -101,6 +101,21 @@ export class UIManager {
                 this.game.setTool(mode);
             });
         }
+
+        const shuffleBtn = document.getElementById('tool-shuffle');
+        if (shuffleBtn) {
+            shuffleBtn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                playUiClick();
+                this.game.randomizeScene();
+                // Little tactile flourish — same idea as the old rotate
+                // micro-tween, but as a quarter spin matching the dice roll.
+                shuffleBtn.animate(
+                    [{ transform: 'rotate(0deg)' }, { transform: 'rotate(180deg)' }],
+                    { duration: 320, easing: 'cubic-bezier(0.2, 1.1, 0.3, 1)' }
+                );
+            });
+        }
     }
 
     _syncToolbar() {

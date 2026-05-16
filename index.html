@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Alter Isle Mini — AlterU</title>
     <link rel="icon" type="image/svg+xml" href="img/aigram.svg" />
-    <link rel="stylesheet" href="styles.css?v=4" />
+    <link rel="stylesheet" href="styles.css?v=5" />
 </head>
 <body>
     <div id="loading-screen">
@@ -66,9 +66,11 @@
         <div id="toolbar-top" role="toolbar" aria-label="Tools">
             <div id="tool-modes" role="group">
                 <button type="button" class="tool-mode" data-mode="place" aria-pressed="true" aria-label="Build">
+                    <!-- Plus sign: add / place. Universally read as "new". -->
                     <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <rect x="6" y="11" width="12" height="8" rx="1" fill="currentColor"/>
-                        <path d="M4 12 L12 5 L20 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+                        <path d="M12 4 V20 M4 12 H20"
+                              fill="none" stroke="currentColor"
+                              stroke-width="3.2" stroke-linecap="round"/>
                     </svg>
                 </button>
                 <button type="button" class="tool-mode" data-mode="pan" aria-pressed="false" aria-label="Pan">
@@ -78,13 +80,31 @@
                     </svg>
                 </button>
                 <button type="button" class="tool-mode" data-mode="erase" aria-pressed="false" aria-label="Erase">
+                    <!-- Tilted stationery eraser: pink rubber tip + ink body
+                         with a small dust speck. The single most recognisable
+                         "erase" glyph in software UI. -->
                     <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M5.5 14.5 L14.5 5.5 L19.5 10.5 L10.5 19.5 L5 19.5 Z"
-                            fill="currentColor"/>
-                        <path d="M9.5 10.5 L15.5 16.5" stroke="#F4F1EA" stroke-width="1.5" fill="none"/>
+                        <g transform="rotate(-32 12 12)">
+                            <rect x="2.5" y="9.5" width="19" height="6.6" rx="1.4" fill="currentColor"/>
+                            <rect x="2.5" y="9.5" width="7"  height="6.6" rx="1.4" fill="#FFB7AD"/>
+                            <line x1="9.5" y1="9.5" x2="9.5" y2="16.1" stroke="currentColor" stroke-width="0.6" opacity="0.5"/>
+                        </g>
+                        <circle cx="6"  cy="19.5" r="0.9" fill="currentColor"/>
+                        <circle cx="8.4" cy="20.4" r="0.6" fill="currentColor"/>
                     </svg>
                 </button>
             </div>
+            <!-- Random-generate action: re-rolls the island in one tap. -->
+            <button type="button" id="tool-shuffle" class="tool-action" aria-label="Shuffle island">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="4" y="4" width="16" height="16" rx="3.5" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="8.5"  cy="8.5"  r="1.6" fill="currentColor"/>
+                    <circle cx="15.5" cy="15.5" r="1.6" fill="currentColor"/>
+                    <circle cx="15.5" cy="8.5"  r="1.6" fill="currentColor"/>
+                    <circle cx="8.5"  cy="15.5" r="1.6" fill="currentColor"/>
+                    <circle cx="12"   cy="12"   r="1.6" fill="currentColor"/>
+                </svg>
+            </button>
         </div>
 
         <!-- First-run hint card -->
@@ -113,6 +133,6 @@
         <div id="toast"></div>
     </div>
 
-    <script type="module" src="src/main.js?v=4"></script>
+    <script type="module" src="src/main.js?v=5"></script>
 </body>
 </html>

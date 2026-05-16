@@ -17,6 +17,17 @@ import { SaveSystem } from '../storage/SaveSystem.js';
 import { cellToScreen } from '../grid/IsoGrid.js';
 import { playPlacementFor } from '../ui/Audio.js';
 
+// Pick `n` distinct elements from `arr` uniformly at random. Used by
+// the scene randomizer to choose which edges become sea.
+function pickN(arr, n) {
+    const pool = arr.slice();
+    const out = [];
+    while (out.length < n && pool.length > 0) {
+        out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    }
+    return out;
+}
+
 export class Game {
     constructor(canvas, ui = null) {
         this.canvas = canvas;
@@ -164,6 +175,126 @@ export class Game {
         this._centerCamera();
         this.renderer.markDirty();
         this.ui?.showToast('World reset');
+    }
+
+    /**
+     * Re-roll the whole island in one tap. Wipes the existing world,
+     * lays down a fresh terrain composition with a beach + sea border,
+     * scatters trees, props, and buildings, then triggers an auto-save.
+     *
+     * The composition uses the same staggered diagonal reveal as the
+     * first-run starter scene so it feels coherent visually, but every
+     * material and placement is randomised.
+     */
+    randomizeScene() {
+        const W = this.tileMap.width;
+        const H = this.tileMap.height;
+
+        // Wipe — every cell, every object — so the new world doesn't
+        // overlap leftover footprints.
+        this.tileMap.clearAll();
+
+        const STEP_MS = 24;
+        const tDelay = (gx, gy) => (gx + gy) * STEP_MS;
+        const oDelay = (gx, gy) => (gx + gy) * STEP_MS + 80;
+
+        // 1) Choose two edges to be sea. The other two edges get a sand
+        //    beach strip. This keeps the island visually "afloat" without
+        //    every roll looking the same.
+        const seaEdges = pickN(['top', 'bottom', 'left', 'right'], 2);
+        const isSea = (gx, gy) =>
+            (seaEdges.includes('top')    && gy === 0)
+         || (seaEdges.includes('bottom') && gy === H - 1)
+         || (seaEdges.includes('left')   && gx === 0)
+         || (seaEdges.includes('right')  && gx === W - 1);
+        const isBeach = (gx, gy) => {
+            if (isSea(gx, gy)) return false;
+            return (seaEdges.includes('top')    && gy === 1)
+                || (seaEdges.includes('bottom') && gy === H - 2)
+                || (seaEdges.includes('left')   && gx === 1)
+                || (seaEdges.includes('right')  && gx === W - 2);
+        };
+
+        // 2) Carve 1–2 path streaks for character. A streak is a random
+        //    walk that meanders 4–8 tiles inland from a non-sea edge.
+        const pathCells = new Set();
+        const streaks = 1 + Math.floor(Math.random() * 2);
+        for (let s = 0; s < streaks; s++) {
+            let len = 4 + Math.floor(Math.random() * 5);
+            let x = 2 + Math.floor(Math.random() * (W - 4));
+            let y = 2 + Math.floor(Math.random() * (H - 4));
+            for (let i = 0; i < len; i++) {
+                if (x > 1 && x < W - 2 && y > 1 && y < H - 2) {
+                    pathCells.add(`${x},${y}`);
+                }
+                if (Math.random() < 0.5) x += (Math.random() < 0.5 ? -1 : 1);
+                else                     y += (Math.random() < 0.5 ? -1 : 1);
+            }
+        }
+
+        // 3) Lay down terrain over the whole grid.
+        for (let gy = 0; gy < H; gy++)
+        for (let gx = 0; gx < W; gx++) {
+            let id;
+            if (isSea(gx, gy))          id = 'water';
+            else if (isBeach(gx, gy))   id = 'sand';
+            else if (pathCells.has(`${gx},${gy}`)) id = 'path';
+            else                        id = 'grass';
+            this.placeAndAnimate(id, gx, gy, { delay: tDelay(gx, gy) });
+        }
+
+        // 4) Drop a handful of buildings on big interior tiles. A
+        //    building's full footprint must fit inside the inland area
+        //    and not overlap a path/beach/sea cell.
+        const BUILDINGS = ['house', 'two_story', 'cube_house', 'villa', 'main_chapel', 'windmill'];
+        const occupied = new Set(); // already-claimed cell keys
+        for (const k of pathCells) occupied.add(k);
+        const buildingCount = 2 + Math.floor(Math.random() * 3); // 2-4
+        let placed = 0;
+        for (let attempt = 0; attempt < 60 && placed < buildingCount; attempt++) {
+            const id = BUILDINGS[Math.floor(Math.random() * BUILDINGS.length)];
+            const def = ASSET_INDEX[id];
+            if (!def) continue;
+            const fw = def.footprint?.w ?? 1;
+            const fd = def.footprint?.d ?? 1;
+            // Inland-only: leave a 2-cell margin from grid edges + beach
+            const gx = 2 + Math.floor(Math.random() * (W - fw - 3));
+            const gy = 2 + Math.floor(Math.random() * (H - fd - 3));
+            let ok = true;
+            for (let dy = 0; dy < fd && ok; dy++)
+            for (let dx = 0; dx < fw && ok; dx++) {
+                const k = `${gx + dx},${gy + dy}`;
+                if (occupied.has(k)) ok = false;
+                if (isBeach(gx + dx, gy + dy) || isSea(gx + dx, gy + dy)) ok = false;
+            }
+            if (!ok) continue;
+            for (let dy = 0; dy < fd; dy++)
+            for (let dx = 0; dx < fw; dx++) {
+                occupied.add(`${gx + dx},${gy + dy}`);
+            }
+            this.placeAndAnimate(id, gx, gy, { delay: oDelay(gx, gy) });
+            placed++;
+        }
+
+        // 5) Scatter trees and small props on free grass cells.
+        const TREES = ['cypress', 'olive', 'bougainvillea', 'agave', 'dry_grass'];
+        const PROPS = ['flower_pot', 'terracotta_pot', 'lantern_post', 'stone_lantern',
+                       'bench', 'banner', 'crate', 'hay_bale', 'large_rock'];
+        const scatterCount = 14 + Math.floor(Math.random() * 8); // 14-21
+        for (let i = 0; i < scatterCount; i++) {
+            const gx = 1 + Math.floor(Math.random() * (W - 2));
+            const gy = 1 + Math.floor(Math.random() * (H - 2));
+            const k = `${gx},${gy}`;
+            if (occupied.has(k)) continue;
+            if (isBeach(gx, gy) || isSea(gx, gy)) continue;
+            const pool = Math.random() < 0.6 ? TREES : PROPS;
+            const id = pool[Math.floor(Math.random() * pool.length)];
+            occupied.add(k);
+            this.placeAndAnimate(id, gx, gy, { delay: oDelay(gx, gy) });
+        }
+
+        this.ui?.showToast('Re-rolled the island');
+        this.requestAutoSave();
     }
 
     /**
