@@ -124,19 +124,93 @@ function buildShadowCanvas(srcCanvas, displayW, displayH) {
     const cssTargetW = targetW / SHADOW_SUPERSAMPLE;
     const cssTargetH = targetH / SHADOW_SUPERSAMPLE;
 
-    // Pre-blur once at load time. If the browser doesn't support
-    // `ctx.filter`, we just ship the un-blurred silhouette — the renderer
-    // adds an extra alpha shrink to soften it visually.
-    if (typeof tctx.filter !== 'string') {
-        return { canvas: tmp, padding: cssPad, width: cssTargetW, height: cssTargetH, blurred: false };
+    // We used to delegate the blur to `ctx.filter = blur(Npx)` once at
+    // load time. That works fine on desktop Chrome but iOS Safari's
+    // canvas-filter implementation is quality-degraded — for a black
+    // silhouette it effectively box-blurs at a stride that leaves
+    // visible terracing at high DPR (the "梯田" the user reported).
+    //
+    // Switch to a pure-JS three-pass box blur on the alpha channel.
+    // Three boxes ≈ a Gaussian; the silhouette is single-channel
+    // (alpha) so we don't pay for RGB work. Cost: O(W·H) for an
+    // entire screen of shadows once at load. Cross-browser identical.
+    boxBlurAlpha(tctx, w, h, SHADOW_BLUR_PX);
+    return { canvas: tmp, padding: cssPad, width: cssTargetW, height: cssTargetH, blurred: true };
+}
+
+/**
+ * In-place three-pass box blur on a canvas context's alpha channel.
+ * Used for shadow silhouettes (R/G/B are constant — we only care about
+ * alpha). Three boxes of width ~radius gives a near-Gaussian falloff.
+ *
+ * Radius here is the Gaussian sigma equivalent; we convert to box width
+ * via the well-known `sqrt(12*sigma^2/3 + 1)` formula.
+ */
+function boxBlurAlpha(ctx, w, h, radius) {
+    if (radius < 1) return;
+    const img = ctx.getImageData(0, 0, w, h);
+    const a = new Uint8ClampedArray(w * h);
+    for (let i = 0; i < a.length; i++) a[i] = img.data[i * 4 + 3];
+
+    // Two scratch buffers + the source, rotated round-robin to avoid
+    // any aliasing between src/dst in the inner passes.
+    const buffers = [a, new Uint8ClampedArray(a.length), new Uint8ClampedArray(a.length)];
+    let srcIdx = 0;
+    const boxes = boxesForGauss(radius, 3);
+    for (const bw of boxes) {
+        const r = (bw - 1) >> 1;
+        const midIdx = (srcIdx + 1) % 3;
+        boxBlurH(buffers[srcIdx], buffers[midIdx], w, h, r);
+        const dstIdx = (midIdx + 1) % 3;
+        boxBlurV(buffers[midIdx], buffers[dstIdx], w, h, r);
+        srcIdx = dstIdx;
     }
-    const out = document.createElement('canvas');
-    out.width  = w;
-    out.height = h;
-    const octx = out.getContext('2d');
-    octx.filter = `blur(${SHADOW_BLUR_PX}px)`;
-    octx.drawImage(tmp, 0, 0);
-    return { canvas: out, padding: cssPad, width: cssTargetW, height: cssTargetH, blurred: true };
+    const final = buffers[srcIdx];
+    for (let i = 0; i < final.length; i++) img.data[i * 4 + 3] = final[i];
+    ctx.putImageData(img, 0, 0);
+}
+
+function boxesForGauss(sigma, n) {
+    const wIdeal = Math.sqrt((12 * sigma * sigma / n) + 1);
+    let wl = Math.floor(wIdeal); if ((wl & 1) === 0) wl--;
+    const wu = wl + 2;
+    const mIdeal = (12 * sigma * sigma - n * wl * wl - 4 * n * wl - 3 * n) / (-4 * wl - 4);
+    const m = Math.round(mIdeal);
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(i < m ? wl : wu);
+    return out;
+}
+
+function boxBlurH(src, dst, w, h, r) {
+    const norm = 1 / (r + r + 1);
+    for (let i = 0; i < h; i++) {
+        let ti = i * w;
+        let li = ti;
+        let ri = ti + r;
+        const fv = src[ti];
+        const lv = src[ti + w - 1];
+        let val = (r + 1) * fv;
+        for (let j = 0; j < r; j++) val += src[ti + j];
+        for (let j = 0; j <= r; j++) { val += src[ri++] - fv; dst[ti++] = val * norm; }
+        for (let j = r + 1; j < w - r; j++) { val += src[ri++] - src[li++]; dst[ti++] = val * norm; }
+        for (let j = w - r; j < w; j++) { val += lv - src[li++]; dst[ti++] = val * norm; }
+    }
+}
+
+function boxBlurV(src, dst, w, h, r) {
+    const norm = 1 / (r + r + 1);
+    for (let i = 0; i < w; i++) {
+        let ti = i;
+        let li = ti;
+        let ri = ti + r * w;
+        const fv = src[ti];
+        const lv = src[ti + w * (h - 1)];
+        let val = (r + 1) * fv;
+        for (let j = 0; j < r; j++) val += src[ti + j * w];
+        for (let j = 0; j <= r; j++) { val += src[ri] - fv; dst[ti] = val * norm; ri += w; ti += w; }
+        for (let j = r + 1; j < h - r; j++) { val += src[ri] - src[li]; dst[ti] = val * norm; li += w; ri += w; ti += w; }
+        for (let j = h - r; j < h; j++) { val += lv - src[li]; dst[ti] = val * norm; li += w; ti += w; }
+    }
 }
 
 /**
