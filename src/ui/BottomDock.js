@@ -105,8 +105,15 @@ export class BottomDock {
             && visibleIds.every((id, i) => id === expectedIds[i]);
         if (!sameSet) this._renderSwatches();
 
+        // The "selected" coral ring should only show while the player is
+        // actually about to place pieces — in Pan or Erase mode no tap
+        // would put the swatched piece down, so leaving the highlight on
+        // would mislead the user. We still remember `selectedAssetId`
+        // internally so switching back to Build restores their choice.
+        const showSelection = this.game.tool === 'place';
         for (const sw of this.swatchesEl.querySelectorAll('.swatch')) {
-            sw.classList.toggle('selected', sw.dataset.assetId === this.game.selectedAssetId);
+            sw.classList.toggle('selected',
+                showSelection && sw.dataset.assetId === this.game.selectedAssetId);
         }
     }
 }
