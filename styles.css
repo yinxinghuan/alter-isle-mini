@@ -78,62 +78,236 @@ html, body {
 }
 #loading-screen.hidden { display: none; }
 
+/* Layered background:
+   - base bone gradient
+   - large soft radial blobs in coral/violet/spark (≈22% opacity) that
+     breathe slowly so the page never feels static
+   - small ink dots for grain */
+
+#loading-screen {
+    background:
+        radial-gradient(ellipse at 22% 24%, rgba(255, 107, 91, 0.10) 0%, transparent 38%),
+        radial-gradient(ellipse at 82% 78%, rgba(157, 141, 255, 0.12) 0%, transparent 40%),
+        linear-gradient(180deg, var(--bone) 0%, var(--bone-2) 100%);
+}
+
+.ls-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+.ls-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(36px);
+    opacity: 0.55;
+    animation: ls-blob-breathe 6.5s ease-in-out infinite;
+}
+.ls-blob-1 {
+    width: 260px; height: 260px;
+    top: -60px; left: -80px;
+    background: var(--coral);
+    animation-delay: 0s;
+}
+.ls-blob-2 {
+    width: 320px; height: 320px;
+    bottom: -100px; right: -90px;
+    background: var(--violet);
+    animation-delay: 1.4s;
+}
+.ls-blob-3 {
+    width: 200px; height: 200px;
+    top: 38%; right: 12%;
+    background: var(--spark);
+    opacity: 0.32;
+    animation-delay: 3.2s;
+}
+@keyframes ls-blob-breathe {
+    0%, 100% { transform: scale(1)   translate(0, 0); opacity: 0.45; }
+    50%      { transform: scale(1.15) translate(8px, -6px); opacity: 0.65; }
+}
+.ls-dot {
+    position: absolute;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--ink);
+    opacity: 0.18;
+}
+.ls-dot-1 { top: 12%; left: 14%; }
+.ls-dot-2 { top: 22%; right: 18%; width: 3px; height: 3px; opacity: 0.25; }
+.ls-dot-3 { bottom: 22%; left: 24%; width: 3px; height: 3px; opacity: 0.2; }
+.ls-dot-4 { bottom: 14%; right: 26%; opacity: 0.15; }
+
+/* ── Card ─────────────────────────────────────────────────────── */
+
 .loading-card {
-    background: var(--bone);
+    position: relative;
+    background: rgba(244, 241, 234, 0.92);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(14, 14, 18, 0.06);
     border-radius: var(--radius-lg);
-    padding: 36px 48px;
-    box-shadow: var(--shadow-lg);
+    padding: 30px 36px 28px;
+    box-shadow:
+        0 30px 80px rgba(14, 14, 18, 0.22),
+        0 8px 24px rgba(14, 14, 18, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
     text-align: center;
     width: 320px;
-    max-width: 80vw;
+    max-width: 86vw;
+    z-index: 1;
+    animation: ls-card-in 0.7s cubic-bezier(0.22, 1.2, 0.36, 1);
 }
-.loading-logo {
-    width: 72px;
-    height: 72px;
-    margin: 0 auto 12px;
-    background: var(--ink);
-    border-radius: 16px;
-    box-shadow: inset 0 -6px 0 rgba(0,0,0,0.2);
+@keyframes ls-card-in {
+    from { opacity: 0; transform: translateY(14px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+/* ── AlterU brand mark (top of card) ──────────────────────────── */
+
+.ls-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    opacity: 0.85;
+}
+.ls-brand-mark {
+    /* Canonical /img/aigram.svg is natively white; render it as a black
+       silhouette on bone via CSS mask, same pattern as the watermark. */
+    width: 88px;
+    height: 60px;
+    background-color: var(--ink);
+    -webkit-mask: url("img/aigram.svg") center / contain no-repeat;
+            mask: url("img/aigram.svg") center / contain no-repeat;
+}
+
+/* ── Isometric tile pulse stage ───────────────────────────────── */
+
+.ls-stage {
     position: relative;
+    width: 120px;
+    height: 80px;
+    margin: 6px auto 22px;
+    transform: rotateX(0deg);
 }
-.loading-logo::before {
-    content: '';
+.ls-tile {
     position: absolute;
-    left: 50%; top: 14px; transform: translateX(-50%);
-    width: 0; height: 0;
-    border-left: 18px solid transparent;
-    border-right: 18px solid transparent;
-    border-bottom: 32px solid var(--bone);
+    width: 56px;
+    height: 56px;
+    border-radius: 5px;
+    /* 2:1 isometric look — rotate 45° then squash vertically. */
+    transform-origin: center;
+    transform: rotate(45deg) scaleY(0.5);
+    box-shadow: 0 3px 6px rgba(14, 14, 18, 0.10);
+    animation: ls-tile-build 2.4s cubic-bezier(0.4, 1.6, 0.5, 1) infinite;
+    opacity: 0;
 }
-.loading-logo::after {
-    content: '';
-    position: absolute;
-    bottom: 16px; left: 50%; transform: translateX(-50%);
-    width: 36px; height: 6px; background: var(--bone);
-    border-radius: 1px;
+.ls-tile-1 {
+    top:  28px; left: 4px;
+    background: var(--coral);
+    animation-delay: 0s;
 }
-.loading-title { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
-.loading-sub   { color: var(--muted); margin-top: 4px; font-size: 13px; }
+.ls-tile-2 {
+    top:  28px; left: 60px;
+    background: var(--violet);
+    animation-delay: 0.18s;
+}
+.ls-tile-3 {
+    top:   4px; left: 32px;
+    background: var(--spark);
+    animation-delay: 0.36s;
+}
+.ls-tile-4 {
+    top:  52px; left: 32px;
+    background: var(--ink);
+    animation-delay: 0.54s;
+}
+@keyframes ls-tile-build {
+    0%         { opacity: 0; transform: rotate(45deg) scaleY(0.5) translateY(14px); }
+    12%        { opacity: 1; transform: rotate(45deg) scaleY(0.5) translateY(0); }
+    65%        { opacity: 1; transform: rotate(45deg) scaleY(0.5) translateY(0); }
+    85%, 100%  { opacity: 0; transform: rotate(45deg) scaleY(0.5) translateY(-8px); }
+}
+
+/* ── Title + tagline ──────────────────────────────────────────── */
+
+.loading-title {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1.1;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.ls-mini-tag {
+    display: inline-block;
+    background: var(--coral);
+    color: var(--bone);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    padding: 2px 8px 1px;
+    border-radius: 999px;
+    transform: translateY(-2px);
+}
+.loading-sub {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* ── Progress bar + status ────────────────────────────────────── */
 
 .loading-bar {
-    margin-top: 20px;
-    height: 6px;
+    position: relative;
+    margin-top: 22px;
+    height: 8px;
     width: 100%;
     background: var(--bone-2);
     border-radius: 999px;
     overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(14, 14, 18, 0.06);
 }
 .loading-fill {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, var(--coral), var(--violet));
-    transition: width 0.18s ease;
+    background: linear-gradient(90deg, var(--coral) 0%, var(--violet) 50%, var(--coral) 100%);
+    background-size: 200% 100%;
+    transition: width 0.22s cubic-bezier(0.4, 0.2, 0.2, 1);
+    border-radius: 999px;
+    animation: ls-fill-shimmer 2.4s linear infinite;
+}
+@keyframes ls-fill-shimmer {
+    0%   { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
 }
 .loading-status {
-    margin-top: 10px;
+    margin-top: 12px;
     font-size: 12px;
     color: var(--muted);
-    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    min-height: 16px;
+}
+.loading-status::after {
+    content: '';
+    display: inline-block;
+    width: 1ch;
+    text-align: left;
+    animation: ls-dots 1.6s steps(4, end) infinite;
+}
+@keyframes ls-dots {
+    0%   { content: ''; }
+    25%  { content: '.'; }
+    50%  { content: '..'; }
+    75%, 100% { content: '...'; }
 }
 
 /* ── Settings button (top-left "•••") ─────────────────────────── */
@@ -475,11 +649,11 @@ html, body {
 
 #watermark {
     position: fixed;
-    left:   calc(14px + var(--safe-left));
-    bottom: calc(var(--dock-height) + 12px + var(--safe-bottom));
-    width: 56px;
-    height: 38px;
-    background-color: rgba(14, 14, 26, 0.34);
+    right: calc(14px + var(--safe-right));
+    top:   calc(14px + var(--safe-top));
+    width: 74px;
+    height: 50px;
+    background-color: var(--ink);
     -webkit-mask: url("img/aigram.svg") center / contain no-repeat;
             mask: url("img/aigram.svg") center / contain no-repeat;
     z-index: 9;

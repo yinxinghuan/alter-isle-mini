@@ -11,10 +11,35 @@
 </head>
 <body>
     <div id="loading-screen">
+        <!-- Decorative floating shapes (purely visual) -->
+        <div class="ls-bg" aria-hidden="true">
+            <span class="ls-blob ls-blob-1"></span>
+            <span class="ls-blob ls-blob-2"></span>
+            <span class="ls-blob ls-blob-3"></span>
+            <span class="ls-dot ls-dot-1"></span>
+            <span class="ls-dot ls-dot-2"></span>
+            <span class="ls-dot ls-dot-3"></span>
+            <span class="ls-dot ls-dot-4"></span>
+        </div>
+
         <div class="loading-card">
-            <div class="loading-logo"></div>
-            <div class="loading-title">Alter Isle Mini</div>
-            <div class="loading-sub">Pre-rendering the island…</div>
+            <!-- Top: AlterU brand mark (uses canonical /img/aigram.svg) -->
+            <div class="ls-brand" aria-label="AlterU">
+                <span class="ls-brand-mark"></span>
+            </div>
+
+            <!-- Centerpiece: 2×2 isometric tile stage that pulses with
+                 the AlterU palette while the game pack pre-renders. -->
+            <div class="ls-stage" aria-hidden="true">
+                <span class="ls-tile ls-tile-1"></span>
+                <span class="ls-tile ls-tile-2"></span>
+                <span class="ls-tile ls-tile-3"></span>
+                <span class="ls-tile ls-tile-4"></span>
+            </div>
+
+            <h1 class="loading-title">Alter Isle <span class="ls-mini-tag">MINI</span></h1>
+            <p class="loading-sub">A sandbox for your alter self</p>
+
             <div class="loading-bar"><div class="loading-fill" id="loading-fill"></div></div>
             <div class="loading-status" id="loading-status">warming the kilns</div>
         </div>
@@ -59,12 +84,6 @@
                     </svg>
                 </button>
             </div>
-            <button type="button" id="tool-rotate" class="tool-action" aria-label="Rotate next placement">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M20 12 A8 8 0 1 1 12 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-                    <path d="M12 1 L16 4 L12 7 Z" fill="currentColor"/>
-                </svg>
-            </button>
         </div>
 
         <!-- First-run hint card -->

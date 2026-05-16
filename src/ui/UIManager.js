@@ -92,29 +92,13 @@ export class UIManager {
 
     _wireToolbar() {
         const modeBtns = Array.from(document.querySelectorAll('.tool-mode'));
-        const rotateBtn = document.getElementById('tool-rotate');
         this.modeBtns = modeBtns;
-        this.rotateBtn = rotateBtn;
-
         for (const b of modeBtns) {
             b.addEventListener('pointerdown', (e) => {
                 e.preventDefault();
                 playUiClick();
                 const mode = b.dataset.mode;
                 this.game.setTool(mode);
-            });
-        }
-
-        if (rotateBtn) {
-            rotateBtn.addEventListener('pointerdown', (e) => {
-                e.preventDefault();
-                playUiClick();
-                this.game.toggleFlipH();
-                // Quick visual confirm — short rotation tween on the icon.
-                rotateBtn.animate(
-                    [{ transform: 'rotate(0deg)' }, { transform: 'rotate(-90deg)' }],
-                    { duration: 220, easing: 'cubic-bezier(0.2, 1.1, 0.3, 1)' }
-                );
             });
         }
     }
