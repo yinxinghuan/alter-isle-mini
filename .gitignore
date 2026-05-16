@@ -20,11 +20,6 @@ dist/
 # project, so it's per-developer and must NOT be committed.
 .netlify/
 
-# Webp duplicates of the .png assets in assets/newAsset/ — the runtime
-# only loads the .png variants; the .webp files are unreferenced
-# byproducts of the asset-export pipeline.
-assets/newAsset/*.webp
-
 # Poster generation scratch — only the final poster.png is checked in.
 poster_candidates/
 
